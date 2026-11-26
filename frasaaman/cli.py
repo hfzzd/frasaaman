@@ -26,6 +26,8 @@ def _parser():
                       help="tambahkan satu digit acak (0-9) di akhir frasa (+~3,3 bit)")
     buat.add_argument("--kapital", action="store_true",
                       help="kapitalkan huruf pertama satu kata acak (+~2,3 bit)")
+    buat.add_argument("--jumlah", type=int, default=1,
+                      help="jumlah frasa yang dibuat sekaligus (1-20, bawaan: 1)")
 
     nilai = sub.add_parser("nilai", help="nilai kekuatan sebuah frasa")
     nilai.add_argument("frasa", help="frasa yang dinilai, mis. kopi-gunung-bulan")
@@ -37,9 +39,15 @@ def _parser():
 def main(argv=None):
     args = _parser().parse_args(argv)
     if args.perintah == "buat":
+        if not 1 <= args.jumlah <= 20:
+            print("Maaf: --jumlah harus antara 1 dan 20.", file=sys.stderr)
+            return 1
         try:
-            frasa = buat_frasa(jumlah=args.kata, pemisah=args.pemisah,
-                               angka=args.angka, kapital=args.kapital)
+            frasa_list = [
+                buat_frasa(jumlah=args.kata, pemisah=args.pemisah,
+                           angka=args.angka, kapital=args.kapital)
+                for _ in range(args.jumlah)
+            ]
         except ValueError as err:
             print(f"Maaf: {err}.", file=sys.stderr)
             return 1
@@ -48,8 +56,11 @@ def main(argv=None):
         label, saran = nilai_kekuatan(bit)
         rincian = rincian_entropi(args.kata, jumlah_kata(),
                                   angka=args.angka, kapital=args.kapital)
-        print(frasa)
-        print(f"Entropi: {bit:.0f} bit ({rincian}) — {label}")
+        for i, frasa in enumerate(frasa_list):
+            if i:
+                print()
+            print(frasa)
+            print(f"Entropi: {bit:.0f} bit ({rincian}) — {label}")
         print(f"Saran: {saran}.")
         return 0
     if args.perintah == "nilai":
