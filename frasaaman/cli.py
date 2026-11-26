@@ -4,7 +4,7 @@ import argparse
 import sys
 
 from . import __version__
-from .frasa import buat_frasa, nilai_frasa
+from .frasa import buat_frasa, entropi, nilai_frasa, nilai_kekuatan, rincian_entropi
 from .kata import jumlah_kata
 
 
@@ -22,6 +22,10 @@ def _parser():
                       help="jumlah kata dalam frasa (bawaan: 5)")
     buat.add_argument("--pemisah", default="-",
                       help="pemisah antar kata (bawaan: -)")
+    buat.add_argument("--angka", action="store_true",
+                      help="tambahkan satu digit acak (0-9) di akhir frasa (+~3,3 bit)")
+    buat.add_argument("--kapital", action="store_true",
+                      help="kapitalkan huruf pertama satu kata acak (+~2,3 bit)")
 
     nilai = sub.add_parser("nilai", help="nilai kekuatan sebuah frasa")
     nilai.add_argument("frasa", help="frasa yang dinilai, mis. kopi-gunung-bulan")
@@ -34,15 +38,19 @@ def main(argv=None):
     args = _parser().parse_args(argv)
     if args.perintah == "buat":
         try:
-            frasa = buat_frasa(jumlah=args.kata, pemisah=args.pemisah)
+            frasa = buat_frasa(jumlah=args.kata, pemisah=args.pemisah,
+                               angka=args.angka, kapital=args.kapital)
         except ValueError as err:
             print(f"Maaf: {err}.", file=sys.stderr)
             return 1
-        hasil = nilai_frasa(frasa, pemisah=args.pemisah)
+        bit = entropi(args.kata, jumlah_kata(),
+                      angka=args.angka, kapital=args.kapital)
+        label, saran = nilai_kekuatan(bit)
+        rincian = rincian_entropi(args.kata, jumlah_kata(),
+                                  angka=args.angka, kapital=args.kapital)
         print(frasa)
-        print(f"Entropi: {hasil['entropi_bit']:.0f} bit "
-              f"({hasil['jumlah_kata']} kata x 9 bit) — {hasil['kekuatan']}")
-        print(f"Saran: {hasil['saran']}.")
+        print(f"Entropi: {bit:.0f} bit ({rincian}) — {label}")
+        print(f"Saran: {saran}.")
         return 0
     if args.perintah == "nilai":
         try:
