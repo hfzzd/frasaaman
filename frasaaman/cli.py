@@ -5,7 +5,8 @@ import sys
 
 from . import __version__
 from .frasa import buat_frasa, entropi, nilai_frasa, nilai_kekuatan, rincian_entropi
-from .kata import jumlah_kata, jumlah_semua_kata, muat_kata_pengguna, tambah_kata
+from .kata import (ekspor_kata, jumlah_kata, jumlah_semua_kata,
+                   muat_kata_pengguna, tambah_kata)
 from .sekali import PANJANG_MAKS, PANJANG_MIN, buat_sandi_sekali_pakai, entropi_sandi
 
 
@@ -44,6 +45,11 @@ def _parser():
                             help="buat kata sandi sekali pakai (tidak disimpan)")
     sekali.add_argument("--panjang", type=int, default=16,
                         help=f"panjang kata sandi ({PANJANG_MIN}-{PANJANG_MAKS}, bawaan: 16)")
+
+    ekspor = sub.add_parser("ekspor-kata",
+                            help="ekspor daftar kata ke berkas (satu kata per baris)")
+    ekspor.add_argument("berkas", nargs="?", default="kata-frasaaman.txt",
+                        help="berkas tujuan (bawaan: kata-frasaaman.txt)")
     return parser
 
 
@@ -115,6 +121,17 @@ def main(argv=None):
         print("Hanya tampil sekali — catat atau salin sekarang.")
         print("FrasaAman tidak menyimpan kata sandi ini di mana pun.")
         return 0
+    if args.perintah == "ekspor-kata":
+        try:
+            jumlah = ekspor_kata(args.berkas)
+        except OSError as err:
+            print(f"Maaf: tidak bisa menulis {args.berkas} ({err}).",
+                  file=sys.stderr)
+            return 1
+        kata_kamu = len(muat_kata_pengguna())
+        print(f"{jumlah} kata diekspor ke {args.berkas} "
+              f"({jumlah_kata()} bawaan + {kata_kamu} kata kamu).")
+        return 0
     print("FrasaAman — generator passphrase diceware Bahasa Indonesia.")
     kata_kamu = len(muat_kata_pengguna())
     if kata_kamu:
@@ -122,7 +139,9 @@ def main(argv=None):
     else:
         print(f"Daftar kata: {jumlah_kata()} kata umum.")
     print("Perintah: `buat` untuk frasa baru, `nilai FRASA` untuk menilai frasa,")
-    print("`tambah-kata KATA` untuk menambah kata kamu sendiri.")
+    print("`tambah-kata KATA` untuk menambah kata kamu sendiri,")
+    print("`sekali-pakai` untuk kata sandi sekali pakai,")
+    print("`ekspor-kata [BERKAS]` untuk mengekspor daftar kata.")
     print("Lihat `frasaaman --help` untuk semua pilihan.")
     return 0
 
