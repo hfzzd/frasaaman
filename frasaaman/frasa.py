@@ -3,7 +3,7 @@
 import math
 import secrets
 
-from .kata import muat_kata
+from .kata import muat_semua_kata
 
 ENTROPI_PER_KATA = 9.0  # log2(512)
 
@@ -19,7 +19,7 @@ def buat_frasa(jumlah=5, pemisah="-", angka=False, kapital=False, rng=None):
     """
     if not isinstance(jumlah, int) or isinstance(jumlah, bool) or jumlah < 1:
         raise ValueError("jumlah kata harus bilangan bulat minimal 1")
-    kata = muat_kata()
+    kata = muat_semua_kata()
     acak = rng if rng is not None else secrets.SystemRandom()
     pilihan = [acak.choice(kata) for _ in range(jumlah)]
     if kapital:
@@ -81,7 +81,7 @@ def nilai_frasa(frasa, pemisah="-"):
     """
     if not frasa or not frasa.strip():
         raise ValueError("frasa tidak boleh kosong")
-    kata = muat_kata()
+    kata = muat_semua_kata()
     bagian = frasa.split(pemisah) if pemisah else [frasa]
     tak_dikenal = [b for b in bagian if b not in kata]
     bit = entropi(len(bagian), len(kata))

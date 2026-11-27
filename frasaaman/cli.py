@@ -5,7 +5,7 @@ import sys
 
 from . import __version__
 from .frasa import buat_frasa, entropi, nilai_frasa, nilai_kekuatan, rincian_entropi
-from .kata import jumlah_kata
+from .kata import jumlah_kata, jumlah_semua_kata, muat_kata_pengguna, tambah_kata
 
 
 def _parser():
@@ -33,6 +33,11 @@ def _parser():
     nilai.add_argument("frasa", help="frasa yang dinilai, mis. kopi-gunung-bulan")
     nilai.add_argument("--pemisah", default="-",
                        help="pemisah antar kata (bawaan: -)")
+
+    tambah = sub.add_parser("tambah-kata",
+                            help="tambah kata kamu sendiri ke daftar kata")
+    tambah.add_argument("kata", nargs="+",
+                        help="satu kata atau lebih (huruf kecil a-z, minimal 3 huruf)")
     return parser
 
 
@@ -51,10 +56,10 @@ def main(argv=None):
         except ValueError as err:
             print(f"Maaf: {err}.", file=sys.stderr)
             return 1
-        bit = entropi(args.kata, jumlah_kata(),
+        bit = entropi(args.kata, jumlah_semua_kata(),
                       angka=args.angka, kapital=args.kapital)
         label, saran = nilai_kekuatan(bit)
-        rincian = rincian_entropi(args.kata, jumlah_kata(),
+        rincian = rincian_entropi(args.kata, jumlah_semua_kata(),
                                   angka=args.angka, kapital=args.kapital)
         for i, frasa in enumerate(frasa_list):
             if i:
@@ -77,9 +82,28 @@ def main(argv=None):
             print(f"Catatan: kata ini tidak ada di daftar FrasaAman: {tak_dikenal}.")
         print(f"Saran: {hasil['saran']}.")
         return 0
+    if args.perintah == "tambah-kata":
+        ditambahkan, ditolak = tambah_kata(*args.kata)
+        if ditambahkan:
+            gabung = ", ".join(ditambahkan)
+            print(f"Kata ditambahkan ({len(ditambahkan)}): {gabung}.")
+            print(f"Daftar kata sekarang: {jumlah_semua_kata()} kata "
+                  f"({jumlah_kata()} bawaan + "
+                  f"{len(muat_kata_pengguna())} kata kamu).")
+        for kata, alasan in ditolak:
+            print(f"Dilewati: {kata} — {alasan}.", file=sys.stderr)
+        if not ditambahkan:
+            print("Maaf: tidak ada kata baru yang ditambahkan.", file=sys.stderr)
+            return 1
+        return 0
     print("FrasaAman — generator passphrase diceware Bahasa Indonesia.")
-    print(f"Daftar kata: {jumlah_kata()} kata umum.")
-    print("Perintah: `buat` untuk frasa baru, `nilai FRASA` untuk menilai frasa.")
+    kata_kamu = len(muat_kata_pengguna())
+    if kata_kamu:
+        print(f"Daftar kata: {jumlah_kata()} kata umum + {kata_kamu} kata kamu.")
+    else:
+        print(f"Daftar kata: {jumlah_kata()} kata umum.")
+    print("Perintah: `buat` untuk frasa baru, `nilai FRASA` untuk menilai frasa,")
+    print("`tambah-kata KATA` untuk menambah kata kamu sendiri.")
     print("Lihat `frasaaman --help` untuk semua pilihan.")
     return 0
 
