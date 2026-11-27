@@ -6,6 +6,7 @@ import sys
 from . import __version__
 from .frasa import buat_frasa, entropi, nilai_frasa, nilai_kekuatan, rincian_entropi
 from .kata import jumlah_kata, jumlah_semua_kata, muat_kata_pengguna, tambah_kata
+from .sekali import PANJANG_MAKS, PANJANG_MIN, buat_sandi_sekali_pakai, entropi_sandi
 
 
 def _parser():
@@ -38,6 +39,11 @@ def _parser():
                             help="tambah kata kamu sendiri ke daftar kata")
     tambah.add_argument("kata", nargs="+",
                         help="satu kata atau lebih (huruf kecil a-z, minimal 3 huruf)")
+
+    sekali = sub.add_parser("sekali-pakai",
+                            help="buat kata sandi sekali pakai (tidak disimpan)")
+    sekali.add_argument("--panjang", type=int, default=16,
+                        help=f"panjang kata sandi ({PANJANG_MIN}-{PANJANG_MAKS}, bawaan: 16)")
     return parser
 
 
@@ -95,6 +101,19 @@ def main(argv=None):
         if not ditambahkan:
             print("Maaf: tidak ada kata baru yang ditambahkan.", file=sys.stderr)
             return 1
+        return 0
+    if args.perintah == "sekali-pakai":
+        try:
+            sandi = buat_sandi_sekali_pakai(panjang=args.panjang)
+        except ValueError as err:
+            print(f"Maaf: {err}.", file=sys.stderr)
+            return 1
+        bit = entropi_sandi(args.panjang)
+        label, _ = nilai_kekuatan(bit)
+        print(sandi)
+        print(f"Entropi: {bit:.0f} bit — {label}")
+        print("Hanya tampil sekali — catat atau salin sekarang.")
+        print("FrasaAman tidak menyimpan kata sandi ini di mana pun.")
         return 0
     print("FrasaAman — generator passphrase diceware Bahasa Indonesia.")
     kata_kamu = len(muat_kata_pengguna())
