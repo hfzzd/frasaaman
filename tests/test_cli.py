@@ -118,7 +118,7 @@ class TestCliUmum(unittest.TestCase):
     def test_version(self):
         hasil = jalankan("--version")
         self.assertEqual(hasil.returncode, 0, hasil.stderr)
-        self.assertIn("0.1.0", hasil.stdout)
+        self.assertIn("0.2.0", hasil.stdout)
 
     def test_tanpa_perintah(self):
         hasil = jalankan()
